@@ -1,0 +1,55 @@
+SESSION19
+Bài 8: Vá Lỗ Hổng Hardcode Secrets Và Thiết Lập Lá Chắn
+
+Tên lớp: HCM K26 CNTT2
+Môn học: Nhập môn công nghệ thông tin
+Họ và tên: LƯƠNG THANH THƯ
+
+
+Phần 1: Phân tích hậu quả và sai lầm kỹ thuật
+Câu 1. Bốn Secrets bị lộ và hậu quả
+OPENAI_API_KEY: hacker gọi API bằng tiền của dự án (nguyên nhân mất 1,200 USD).
+STEAM_WEB_API_KEY: hacker lạm dụng API Steam với danh nghĩa studio, lấy dữ liệu, gây mất uy tín.
+MONGO_URI: chứa tài khoản admin_root và mật khẩu, hacker đọc, sửa, xóa hoặc tống tiền toàn bộ dữ liệu.
+JWT_SECRET: hacker tự ký token giả, đăng nhập thành bất kỳ ai (kể cả admin) mà không cần mật khẩu.
+
+Câu 2. Vì sao xóa commit hoặc chuyển Private vẫn phải Revoke?
+Bot quét key trong 3 đến 5 giây sau khi push, nhanh hơn nhiều so với 10 phút.
+Khóa đã bị sao chép ra ngoài, chuyển Private hay xóa commit không lấy lại được.
+Lịch sử Git, fork, clone vẫn có thể còn bản cũ.
+Kết luận: khóa đã công khai là đã lộ, bắt buộc Revoke và tạo khóa mới.
+
+Phần 2: Sửa lỗi và chuẩn hóa an ninh
+Câu 3. Tệp .env (chỉ nằm trên máy cục bộ)
+OPENAI_API_KEY=sk-proj-NEW_KEY_AFTER_REVOKE
+STEAM_WEB_API_KEY=NEW_STEAM_KEY_AFTER_REVOKE
+MONGO_URI=mongodb+srv://NEW_USER:NEW_PASSWORD@cluster0.pixelforge.net/cyberrealm_db
+JWT_SECRET=NEW_LONG_RANDOM_SECRET
+
+Câu 4. server.js an toàn
+js
+require('dotenv').config();
+
+const express = require('express');
+const app = express();
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const STEAM_WEB_API_KEY = process.env.STEAM_WEB_API_KEY;
+const MONGO_URI = process.env.MONGO_URI;
+const JWT_SECRET = process.env.JWT_SECRET;
+
+app.listen(3000, () => console.log('Game Server running on port 3000'));
+Cài thư viện: npm install dotenv.
+
+Câu 5. Tệp .gitignore
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+
+Câu 6. Tệp .env.example (an toàn để push)
+OPENAI_API_KEY=
+STEAM_WEB_API_KEY=
+MONGO_URI=
+JWT_SECRET=
